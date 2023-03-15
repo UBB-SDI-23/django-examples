@@ -6,6 +6,7 @@ class Student(models.Model):
     email = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
     age = models.IntegerField()
+    courses = models.ManyToManyField('Course', through='CourseStudent')
 
     def __str__(self):
         return self.name
@@ -25,6 +26,7 @@ class Course(models.Model):
     description = models.TextField()
     # students = models.ManyToManyField(Student)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    students = models.ManyToManyField(Student, through='CourseStudent')
 
     def __str__(self):
         return self.name

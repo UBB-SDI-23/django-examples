@@ -1,4 +1,5 @@
-from django.db.models import Avg
+from django.db.models import Avg, Count, OuterRef, Subquery, Q, Case, When, \
+    IntegerField, Exists
 from rest_framework import generics
 from .models import Course, Student, Teacher, CourseStudent
 from .serializers import CourseSerializer, StudentSerializer, \
@@ -43,22 +44,31 @@ class CoursesByAvgStudentAge(generics.ListAPIView):
     serializer_class = CourseSerializer
 
     def get_queryset(self):
+
         query = Course.objects\
-            .annotate(avg_age=Avg('coursestudent__student__age'))\
+            .annotate(avg_age=Avg('enrolled_students__student__age'))\
             .order_by('avg_age')
         print(query.query)
 
         return query
 
 
-class CoursesWithStudents(generics.ListAPIView):
+class CoursesByNumberOfOtherCoursesEnrolledIn(generics.ListCreateAPIView):
     serializer_class = CourseSerializer
 
     def get_queryset(self):
-        courses = CourseStudent.objects.select_related('course', 'student')
-        print(courses.query)
-        for course in courses:
-            students = Course.objects.filter(id=course.id).values('coursestudent__student__name')
-            print(students.query)
-            for student in students:
-                print(student)
+
+        query = Course.objects.annotate(
+            num_other_courses=Count(
+                Student.courses.through.objects.filter(
+                    course_id=OuterRef('pk')
+                ).exclude(
+                    student_id=OuterRef('students__id')
+                ).values('student_id').distinct(),
+                distinct=True
+            )
+        ).order_by('-num_other_courses')
+
+        print(query.query)
+
+        return query

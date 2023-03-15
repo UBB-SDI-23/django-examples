@@ -20,10 +20,10 @@ class CourseSerializer(serializers.ModelSerializer):
     teacher_id = serializers.IntegerField(write_only=True)
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(max_length=255)
-    students = StudentSerializer(many=True, read_only=True)
     teacher = TeacherSerializer(read_only=True)
 
     avg_age = serializers.FloatField(read_only=True)
+    num_other_courses = serializers.IntegerField(read_only=True)
 
     def validate_teacher_id(self, value):
         filter = Teacher.objects.filter(id=value)
@@ -33,7 +33,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id', 'name', 'description', 'teacher_id', 'teacher', 'students', 'avg_age')
+        fields = ('id', 'name', 'description', 'teacher_id', 'teacher', 'avg_age', 'num_other_courses')
 
 
 class CourseStudentSerializer(serializers.ModelSerializer):
