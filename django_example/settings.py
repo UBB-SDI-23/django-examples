@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 # Application definition
 
@@ -39,7 +43,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_api.apps.RestApiConfig',
     'corsheaders',
-    'rest_framework'
+    'rest_framework',
+    'drf_spectacular',
+
 ]
 
 MIDDLEWARE = [

@@ -1,40 +1,60 @@
 from django.db.models import Avg, Count, OuterRef, Subquery, Q, Case, When, \
     IntegerField, Exists
-from rest_framework import generics
+from django.http import JsonResponse
+from django.views import View
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .models import Course, Student, Teacher, CourseStudent
 from .serializers import CourseSerializer, StudentSerializer, \
     TeacherSerializer, CourseStudentSerializer
 
 
-class CourseList(generics.ListCreateAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+class CourseDetailsUpdateDeleteView(APIView):
+    def get(self, request, pk, *args, **kwargs):
+
+        try:
+            course = Course.objects.get(pk=pk)
+            serializer = CourseSerializer(course, exclude_fields=['students__courses'])
+            return Response(serializer.data)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk, *args, **kwargs):
+        try:
+            course = Course.objects.get(pk=pk)
+            serializer = CourseSerializer(course, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+            course = Course.objects.get(pk=pk)
+            course.delete()
+            return Response({'message': 'Course deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course does not exist'}, status=404)
 
 
-class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
+class CourseListCreateView(APIView):
+    def get(self, request, *args, **kwargs):
+        courses = Course.objects.all()
+        serializer = CourseSerializer(courses, many=True, exclude_fields=['students'])
+        return Response(serializer.data)
 
-
-class StudentList(generics.ListCreateAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-
-
-class StudentDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
-
-
-class TeacherList(generics.ListCreateAPIView):
-    queryset = Teacher.objects.all()
-    serializer_class = TeacherSerializer
-
-
-class TeacherDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Teacher.objects.all()
-    serializer_class = TeacherSerializer
-
+    def post(self, request, *args, **kwargs):
+        serializer = CourseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
 
 class StudentCourseEnrollment(generics.CreateAPIView):
     serializer_class = CourseStudentSerializer
