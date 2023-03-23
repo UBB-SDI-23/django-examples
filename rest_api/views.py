@@ -12,6 +12,8 @@ from .serializers import CourseSerializer, StudentSerializer, \
 
 
 class CourseDetailsUpdateDeleteView(APIView):
+    serializer_class = CourseSerializer
+
     def get(self, request, pk, *args, **kwargs):
 
         try:
@@ -43,6 +45,8 @@ class CourseDetailsUpdateDeleteView(APIView):
 
 
 class CourseListCreateView(APIView):
+    serializer_class = CourseSerializer
+
     def get(self, request, *args, **kwargs):
         courses = Course.objects.all()
         serializer = CourseSerializer(courses, many=True, exclude_fields=['students'])
